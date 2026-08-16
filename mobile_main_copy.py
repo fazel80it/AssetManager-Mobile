@@ -2029,6 +2029,7 @@ def main(page):
                 allow_multiple=False,
                 file_type=ft.FilePickerFileType.CUSTOM,
                 allowed_extensions=["zip"],
+                with_data=True,
             )
 
             if not files:
@@ -2038,17 +2039,40 @@ def main(page):
                 )
 
                 return
-
+            #########################
             package_path = files[0].path
 
             if not package_path:
 
                 print(
-                    "TRANSFER PACKAGE PATH IS EMPTY"
+                    "PATH EMPTY - USING FILE BYTES"
                 )
 
-                return
+                if files[0].bytes:
 
+                    import tempfile
+
+                    temp_file = tempfile.NamedTemporaryFile(
+                        delete=False,
+                        suffix=".zip"
+                    )
+
+                    temp_file.write(
+                        files[0].bytes
+                    )
+
+                    temp_file.close()
+
+                    package_path = temp_file.name
+
+                else:
+
+                    print(
+                        "NO FILE DATA AVAILABLE"
+                    )
+
+                    return
+            ###################################
             print(
                 "TRANSFER PACKAGE SELECTED:",
                 package_path
