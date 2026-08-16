@@ -142,8 +142,15 @@ def load_records():
 ######################
 def main(page):
 
-    
+    page.title = "AssetManager"
 
+    page.bgcolor = ft.Colors.WHITE
+
+
+    # -----------------------------
+    # ادامه کد اصلی برنامه
+    # -----------------------------
+    
     file_picker = ft.FilePicker()
 
     page.services.append(file_picker)
@@ -285,33 +292,27 @@ def main(page):
         horizontal_margin=10,
         divider_thickness=1,
     )
-    table_width = max(page.width or 400, 1390)
+    TABLE_WIDTH = 1500
 
     custom_table = ft.ListView(
-        width=table_width,
+        width=TABLE_WIDTH,
         expand=True,
         spacing=0,
         auto_scroll=False,
     )
-    def resize_page(e):
-        custom_table.width = max(page.width or 400, 1390)
-        page.update()
-
-    page.on_resize = resize_page
-
     #################################
     def create_table_header():
 
         widths = [
-            150,   # تاریخ اعلام موضوع
-            300,   # شرح موضوع
-            170,   # اشخاص مرتبط
-            300,   # سوابق
-            150,   # تاریخ پیگیری
-            130,   # وضعیت
-            150,   # محول به
-            120,   # تاریخ
-            300,   # توضیحات
+            130,   # تاریخ اعلام موضوع
+            240,   # شرح موضوع
+            140,   # اشخاص مرتبط
+            240,   # سوابق
+            140,   # تاریخ پیگیری
+            120,   # وضعیت
+            140,   # محول به
+            110,   # تاریخ
+            240,   # توضیحات
         ]
 
         headers = []
@@ -385,15 +386,15 @@ def main(page):
         print("CREATE TABLE ROW CALLED")
 
         widths = [
-            150,   # تاریخ اعلام موضوع
-            300,   # شرح موضوع
-            170,   # اشخاص مرتبط
-            300,   # سوابق
-            150,   # تاریخ انجام-پیگیری
-            130,   # وضعیت
-            150,   # محول به تاریخ
-            120,   # تاریخ دوم
-            300,   # توضیحات
+            130,   # تاریخ اعلام موضوع
+            240,   # شرح موضوع
+            140,   # اشخاص مرتبط
+            240,   # سوابق
+            140,   # تاریخ انجام-پیگیری
+            120,   # وضعیت
+            140,   # محول به تاریخ
+            110,   # تاریخ دوم
+            240,   # توضیحات
         ]
 
         values = [
@@ -3132,6 +3133,13 @@ def main(page):
     )
 
     table_width = max(page.width or 400, 1390)
+    #################جهت اضافه کردن لوگو
+    
+
+    page.controls.clear()
+    page.update()
+    
+
     page.add(
         title,
         ft.Divider(),
@@ -3140,42 +3148,33 @@ def main(page):
 
         ft.Container(
             height=600,
+            expand=True,
 
-            content=ft.Column(
+            content=ft.Row(
                 controls=[
-                    # ==============================
-                    # Header ثابت
-                    # ==============================
-
-                    ft.Row(
-                        [
-                            create_table_header()
-                        ],
-                        spacing=0,
-                        scroll=ft.ScrollMode.ALWAYS,
-                    ),
-
-                    # ==============================
-                    # بدنه جدول
-                    # ==============================
-
                     ft.Container(
-                        expand=True,
+                        width=TABLE_WIDTH,
+                        height=600,
 
-                        content=ft.Row(
-                            [
-                                custom_table
+                        content=ft.Column(
+                            controls=[
+                                create_table_header(),
+
+                                ft.Container(
+                                    expand=True,
+                                    width=TABLE_WIDTH,
+                                    content=custom_table,
+                                ),
                             ],
 
                             spacing=0,
-
-                            scroll=ft.ScrollMode.ALWAYS,
+                            expand=True,
                         ),
                     ),
                 ],
 
                 spacing=0,
-
+                scroll=ft.ScrollMode.ALWAYS,
                 expand=True,
             ),
 
@@ -3184,6 +3183,7 @@ def main(page):
     )
 
     refresh_table()
+    
 
     print(
         "VISIBLE CONTROLS:",
@@ -3191,4 +3191,4 @@ def main(page):
     )
 
 if __name__ == "__main__":
-    ft.app(target=main)
+    ft.run(main, assets_dir="assets")
