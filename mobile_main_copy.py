@@ -162,6 +162,8 @@ def main(page):
 
     page.rtl = True
 
+    page.scroll = ft.ScrollMode.AUTO
+
     page.padding = 15
 
     page.scroll = ft.ScrollMode.AUTO
@@ -300,6 +302,7 @@ def main(page):
         spacing=0,
         auto_scroll=False,
     )
+    search_text = ""
     #################################
     def create_table_header():
 
@@ -1321,35 +1324,93 @@ def main(page):
 
         page.update()
 
+    #######################تابع سرچ
 
+    def search_changed(e):
+        nonlocal search_text
 
+        search_text = e.control.value.strip()
 
+        print("SEARCH TEXT:", repr(search_text))
+
+        refresh_table()
+
+########################### تابع مربوط به فیلتر رکورد ها
+    def filter_records(records):
+
+        keyword = search_text.casefold().strip()
+        selected_status = status_filter.value
+
+        filtered = []
+
+        for record in records:
+
+            # وضعیت رکورد
+            record_status = (
+                ""
+                if record[8] is None
+                else str(record[8]).strip()
+            )
+
+            # فیلتر وضعیت
+            if (
+                selected_status
+                and selected_status != "همه"
+                and record_status != selected_status
+            ):
+                continue
+
+            # فیلتر جستجو
+            if keyword:
+
+                fields = [
+                    record[1],
+                    record[2],
+                    record[4],
+                    record[5],
+                    record[7],
+                    record[8],
+                    record[9],
+                    record[10],
+                    record[11],
+                ]
+
+                text = " ".join(
+                    ""
+                    if value is None
+                    else str(value)
+                    for value in fields
+                ).casefold()
+
+                if keyword not in text:
+                    continue
+
+            filtered.append(record)
+
+        return filtered
+    ########################### تابع وضعیت
+    def status_changed(e):
+        refresh_table()
+
+    ##########################
     def refresh_table():
 
         custom_table.controls.clear()
 
-        records = load_records()
+        all_records = load_records()
 
-        print("******** NEW REFRESH FUNCTION ********")
-        print("RECORDS COUNT:", len(records))
+        records = filter_records(all_records)
 
+        print("ALL RECORDS:", len(all_records))
+        print("FILTERED RECORDS:", len(records))
 
-        # هدر جدول
-        #custom_table.controls.append(
-            #create_table_header()
-        #)
-
-
-        # ردیف‌ها
         for record in records:
-
             custom_table.controls.append(
                 create_table_row(record)
             )
 
-
         page.update()
-
+    ##############################
     def open_add_dialog(e):
         
 
@@ -3156,8 +3217,35 @@ def main(page):
         spacing=10,
     )
 
+########################### اضافه کردن جستجو 
+
+    search_box = ft.TextField(
+        hint_text="جستجو در اطلاعات...",
+        prefix_icon=ft.Icons.SEARCH,
+        height=45,
+        width=450,
+        text_size=14,
+        on_change=search_changed,
+    )
+
+    ############################فیلتر وضعیت
+    status_filter = ft.Dropdown(
+        label="وضعیت",
+        width=180,
+        value="همه",
+        options=[
+            ft.DropdownOption(key="همه", text="همه"),
+            ft.DropdownOption(key="انجام شد", text="انجام شد"),
+            ft.DropdownOption(key="در حال انجام", text="در حال انجام"),
+            ft.DropdownOption(key="در حال بررسی", text="در حال بررسی"),
+            ft.DropdownOption(key="مختومه", text="مختومه"),
+        ],
+        on_select=lambda e: status_changed(e),
+    )
+
+#############################
     table_width = max(page.width or 400, 1390)
-    #################جهت اضافه کردن لوگو
+  
     
 
     page.controls.clear()
@@ -3169,6 +3257,18 @@ def main(page):
         ft.Divider(),
         buttons,
         ft.Divider(),
+        ft.Container(
+            padding=10,
+
+            content=ft.Row(
+                controls=[
+                    search_box,
+                    status_filter,
+                ],
+                spacing=10,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+        ),
 
         ft.Container(
             height=600,
@@ -3178,6 +3278,7 @@ def main(page):
                 controls=[
                     ft.Container(
                         width=TABLE_WIDTH,
+                        alignment=ft.Alignment.TOP_RIGHT,
                         height=600,
 
                         content=ft.Column(
@@ -3198,7 +3299,7 @@ def main(page):
                 ],
 
                 spacing=0,
-                scroll=ft.ScrollMode.ALWAYS,
+                scroll=ft.ScrollMode.AUTO,
                 expand=True,
             ),
 
