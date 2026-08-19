@@ -1933,7 +1933,7 @@ def main(page):
 
             page.update()
     ##################################
-    def create_transfer_package(e):
+    async def create_transfer_package(e):
 
         print("TRANSFER PACKAGE BUTTON CLICKED")
 
@@ -1941,24 +1941,31 @@ def main(page):
             import zipfile
             from datetime import datetime
             import json
+            import tempfile
+            import os
+            import shutil
 
-            transfer_dir = os.path.join(
-                BASE_DIR,
-                "transfer"
-            )
-
-            os.makedirs(
-                transfer_dir,
-                exist_ok=True
-            )
+            # ==================================================
+            # نام بسته انتقال
+            # ==================================================
 
             timestamp = datetime.now().strftime(
                 "%Y-%m-%d_%H-%M-%S"
             )
 
-            package_file = os.path.join(
-                transfer_dir,
+            package_name = (
                 f"AssetManager_Transfer_{timestamp}.zip"
+            )
+
+            # ==================================================
+            # ساخت بسته موقت
+            # ==================================================
+
+            temp_dir = tempfile.gettempdir()
+
+            temp_package_file = os.path.join(
+                temp_dir,
+                package_name
             )
 
             transfer_info = {
@@ -1967,12 +1974,15 @@ def main(page):
             }
 
             with zipfile.ZipFile(
-                package_file,
+                temp_package_file,
                 "w",
                 zipfile.ZIP_DEFLATED
             ) as package_zip:
 
+                # ------------------------------------------
                 # اطلاعات بسته
+                # ------------------------------------------
+
                 package_zip.writestr(
                     "transfer_info.json",
                     json.dumps(
@@ -1982,7 +1992,10 @@ def main(page):
                     )
                 )
 
+                # ------------------------------------------
                 # دیتابیس
+                # ------------------------------------------
+
                 if os.path.exists(DATABASE_PATH):
 
                     package_zip.write(
@@ -1990,10 +2003,15 @@ def main(page):
                         arcname="database/database.db"
                     )
 
+                # ------------------------------------------
                 # تصاویر
+                # ------------------------------------------
+
                 if os.path.exists(IMAGE_DIR):
 
-                    for root, dirs, files in os.walk(IMAGE_DIR):
+                    for root, dirs, files in os.walk(
+                        IMAGE_DIR
+                    ):
 
                         for file in files:
 
@@ -2013,13 +2031,73 @@ def main(page):
                             )
 
             print(
-                "TRANSFER PACKAGE CREATED:",
-                package_file
+                "TEMP TRANSFER PACKAGE CREATED:",
+                temp_package_file
             )
+
+            # ==================================================
+            # پرسیدن مسیر ذخیره از کاربر
+            # ==================================================
+
+            save_path = await file_picker.save_file(
+                dialog_title="ذخیره بسته انتقال",
+                file_name=package_name,
+                file_type=ft.FilePickerFileType.CUSTOM,
+                allowed_extensions=["zip"],
+            )
+
+            # ==================================================
+            # کاربر لغو کرده
+            # ==================================================
+
+            if not save_path:
+
+                print(
+                    "TRANSFER PACKAGE SAVE CANCELLED"
+                )
+
+                try:
+                    os.remove(temp_package_file)
+                except Exception:
+                    pass
+
+                return
+
+            print(
+                "USER SELECTED SAVE PATH:",
+                save_path
+            )
+
+            # ==================================================
+            # انتقال بسته موقت به مسیر انتخاب‌شده
+            # ==================================================
+
+            shutil.copy2(
+                temp_package_file,
+                save_path
+            )
+
+            # ==================================================
+            # حذف فایل موقت
+            # ==================================================
+
+            try:
+                os.remove(temp_package_file)
+            except Exception:
+                pass
+
+            print(
+                "TRANSFER PACKAGE SAVED:",
+                save_path
+            )
+
+            # ==================================================
+            # پیام موفقیت
+            # ==================================================
 
             page.snack_bar = ft.SnackBar(
                 ft.Text(
-                    "بسته انتقال با موفقیت ایجاد شد"
+                    "بسته انتقال با موفقیت ذخیره شد"
                 )
             )
 
@@ -2038,7 +2116,7 @@ def main(page):
                 ft.Text(
                     f"خطا در ایجاد بسته انتقال: {error}"
                 )
-            )   
+            )
 
             page.snack_bar.open = True
 
@@ -3197,7 +3275,7 @@ def main(page):
         hint_text="جستجو در اطلاعات...",
         prefix_icon=ft.Icons.SEARCH,
         height=45,
-        width=450,
+        #width=300,
         text_size=14,
         on_change=search_changed,
     )
@@ -3205,7 +3283,7 @@ def main(page):
     ############################فیلتر وضعیت
     status_filter = ft.Dropdown(
         label="وضعیت",
-        width=180,
+        width=160,
         value="همه",
         options=[
             ft.DropdownOption(key="همه", text="همه"),
@@ -3241,11 +3319,17 @@ def main(page):
 
             content=ft.Row(
                 controls=[
-                    search_box,
+                    ft.Container(
+                        expand=True,
+                        content=search_box,
+                    ),
+
                     status_filter,
                 ],
+
                 spacing=10,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                expand=True,
             ),
         ),
 
