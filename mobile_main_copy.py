@@ -2047,17 +2047,15 @@ def main(page):
 
     #############################
     async def restore_transfer_package(
-        e,
-        selected_backup=None
-    ):
+            e,
+            selected_backup=None
+        ):
 
         print("RESTORE BUTTON CLICKED")
 
         try:
             import zipfile
             import json
-            import tempfile
-            import uuid
 
             # ==================================================
             # اگر Backup از پنجره مدیریت انتخاب شده
@@ -2090,7 +2088,6 @@ def main(page):
                 allow_multiple=False,
                 file_type=ft.FilePickerFileType.CUSTOM,
                 allowed_extensions=["zip"],
-                with_data=True,
             )
 
             if not files:
@@ -2100,40 +2097,17 @@ def main(page):
                 )
 
                 return
-            #########################
+
             package_path = files[0].path
 
             if not package_path:
 
                 print(
-                    "PATH EMPTY - USING FILE BYTES"
+                    "TRANSFER PACKAGE PATH IS EMPTY"
                 )
 
-                if files[0].bytes:
+                return
 
-                    import tempfile
-
-                    temp_file = tempfile.NamedTemporaryFile(
-                        delete=False,
-                        suffix=".zip"
-                    )
-
-                    temp_file.write(
-                        files[0].bytes
-                    )
-
-                    temp_file.close()
-
-                    package_path = temp_file.name
-
-                else:
-
-                    print(
-                        "NO FILE DATA AVAILABLE"
-                    )
-
-                    return
-            ###################################
             print(
                 "TRANSFER PACKAGE SELECTED:",
                 package_path
@@ -3257,8 +3231,13 @@ def main(page):
         ft.Divider(),
         buttons,
         ft.Divider(),
+
         ft.Container(
             padding=10,
+
+            margin=ft.Margin.only(
+                right=30,
+            ),
 
             content=ft.Row(
                 controls=[
@@ -3278,8 +3257,11 @@ def main(page):
                 controls=[
                     ft.Container(
                         width=TABLE_WIDTH,
-                        alignment=ft.Alignment.TOP_RIGHT,
                         height=600,
+
+                        margin=ft.Margin.only(
+                            right=30,
+                        ),
 
                         content=ft.Column(
                             controls=[
